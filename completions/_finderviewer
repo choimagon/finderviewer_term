@@ -1,0 +1,7 @@
+#compdef finderviewer
+# FinderViewer managed completion
+# Complete directories only; zsh handles Korean names and spaces.
+_arguments \
+  '(-h --help)'{-h,--help}'[도움말 표시]' \
+  '--version[버전 표시]' \
+  '1:탐색할 폴더:_files -/'

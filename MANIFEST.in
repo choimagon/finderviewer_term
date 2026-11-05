@@ -1,0 +1,8 @@
+include README.md LICENSE CHANGELOG.md requirements-dev.lock
+recursive-include completions *
+recursive-include scripts *.py
+recursive-include docs *.svg
+recursive-include tests *.py
+prune .venv
+prune dist
+prune build

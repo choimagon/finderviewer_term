@@ -1,0 +1,16 @@
+# Tested development environment; no editable checkout paths.
+Pygments==2.21.0
+Send2Trash==2.1.0
+iniconfig==2.3.1
+linkify-it-py==2.2.0
+markdown-it-py==4.2.0
+mdit-py-plugins==0.6.1
+mdurl==0.1.2
+packaging==26.3
+platformdirs==4.14.5
+pluggy==1.7.0
+pytest-asyncio==1.4.1.post1
+pytest==9.2.0
+rich==15.0.0
+textual==8.2.8
+typing_extensions==4.16.0
