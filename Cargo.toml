@@ -1,0 +1,26 @@
+[package]
+name = "finderviewer"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+description = "Finder-style terminal column file explorer"
+repository = "https://github.com/choimagon/finderviewer_term"
+
+[dependencies]
+anyhow = "1"
+ratatui = "0.29"
+crossterm = "0.28"
+libc = "0.2"
+trash = "5"
+shell-words = "1"
+percent-encoding = "2"
+chrono = "0.4"
+unicode-width = "0.2"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

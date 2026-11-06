@@ -2,201 +2,154 @@
 
 **터미널에서 Finder처럼 폴더를 열 단위로 탐색하는 파일 탐색기입니다.**
 
-마우스로 폴더를 클릭하면 오른쪽 열에 하위 항목이 펼쳐집니다. 파일 복사·이동·이름 변경·휴지통 삭제까지 터미널 안에서 처리할 수 있습니다. Python과 Textual로 만들었으며, VS Code 확장 설치 없이 독립 실행합니다.
+0.2.0부터 Rust로 만들었습니다. Python이나 가상환경 없이 실행 파일 하나로 사용할 수 있습니다. 폴더를 클릭하면 오른쪽 열이 펼쳐지고 파일 복사·이동·이름 변경·휴지통 삭제를 지원합니다. VS Code 확장과 별도로 실행합니다.
 
-![FinderViewer 터미널 화면](docs/images/preview.svg)
+기본 명령은 **`finderviewer`**이며 **`finderview`는 같은 프로그램을 여는 별칭**입니다.
 
-## 실행 모습
+## 바로 설치 — Apple Silicon Mac
 
-```text
-터미널 테스트         │ 논문                │ 리비전
-› 논문                │ › 리비전            │ · 수정본.docx
-› 실험                │ · 원고.docx         │ · 답변서.pdf
-· README.md           │ · 검토.pdf          │
-```
+[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.2.0)에서 **`finderviewer-v0.2.0-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
 
-기본 명령은 **`finderviewer`**입니다. **`finderview`는 같은 프로그램을 여는 별칭**입니다. 설치할 때 이미 다른 `finderview` 명령이 있으면 별칭은 덮어쓰지 않고 `finderviewer`만 등록합니다.
-
-## 지원 환경
-
-- Python **3.11 이상**이 필요합니다.
-- **macOS**에서 실제 Herdr 패널 실행, 경로 Tab 완성, 파일 이동·이름 변경·휴지통 동작을 확인했습니다.
-- Linux/Windows용 파일·외부 앱 처리 코드는 포함되어 있지만 실기기 검증은 아직입니다.
-- 마우스 이벤트를 전달하는 터미널이 필요합니다. 터미널이 우클릭을 자체 메뉴로 처리하면 **F10**을 사용하세요.
-- 외부 앱 열기는 운영체제의 파일 연결을 사용합니다. 문서에 연결된 앱은 별도로 설치되어 있어야 합니다.
-
-## 빠른 설치 — macOS / Linux
-
-Python 버전을 먼저 확인합니다.
+다운로드한 폴더에서:
 
 ```sh
-python3 --version
+tar xzf finderviewer-v0.2.0-macos-arm64.tar.gz
+cd finderviewer-v0.2.0-macos-arm64
+sh scripts/install.sh --binary ./finderviewer
 ```
 
-3.11 미만이면 [Python 공식 다운로드](https://www.python.org/downloads/) 또는 사용 중인 패키지 관리자로 새 버전을 설치하세요. Git과 Python이 준비됐다면:
+새 터미널에서 `finderviewer .`을 실행하세요. 셸을 지정하려면 `--shell zsh` 또는 `--shell bash`를 함께 쓸 수 있습니다. 명령만 설치하려면 `--shell none`을 지정합니다. 바이너리는 `~/.local/bin`에 복사되므로 압축을 푼 원본 폴더는 보관하지 않아도 됩니다.
+
+macOS가 다운로드한 실행 파일을 차단하면 시스템 설정의 **개인정보 보호 및 보안**에서 해당 파일의 실행 허용 여부를 확인하세요. 함께 제공하는 `SHA256SUMS`로 다운로드 파일의 체크섬도 확인할 수 있습니다.
+
+## 소스 빌드 설치 — macOS / Linux
+
+소스 빌드에는 Git과 Rust 툴체인이 필요합니다. Rust가 없다면 [rustup 공식 안내](https://rustup.rs)에 따라 설치한 뒤 새 터미널을 여세요.
 
 ```sh
 git clone https://github.com/choimagon/finderviewer_term.git
 cd finderviewer_term
-python3 -m venv .venv
-.venv/bin/python -m pip install .
-.venv/bin/python scripts/install.py
+sh scripts/install.sh
 ```
 
-설치 스크립트가 기본 셸을 감지해 zsh 또는 Bash 자동완성을 등록합니다. **새 터미널을 열고** 실행하세요.
+설치 스크립트가 `cargo build --release --locked`로 빌드한 다음 실행 파일을 `~/.local/bin/finderviewer`에 복사합니다. 저장소를 옮기거나 지워도 설치한 바이너리는 실행됩니다. zsh/Bash에서는 PATH와 폴더 Tab 자동완성도 등록합니다. **새 터미널에서** 실행하세요.
 
 ```sh
 finderviewer .
 ```
 
-현재 디렉터리를 시작 폴더로 엽니다. 다른 폴더도 지정할 수 있습니다.
+macOS/Linux용 자동 설치 스크립트입니다. Windows는 자동 설치·PowerShell 자동완성을 지원하지 않습니다. 각 운영체제에서의 검증 범위는 릴리스 안내를 확인하세요. 파일 열기는 운영체제의 기본 연결 앱을 사용하므로 해당 앱이 필요합니다.
+
+### 설치 옵션
 
 ```sh
+sh scripts/install.sh --shell zsh
+sh scripts/install.sh --shell bash
+sh scripts/install.sh --shell none
+```
+
+기본값 `auto`는 `$SHELL`을 기준으로 셸을 선택합니다. `none`은 셸 설정을 변경하지 않습니다. 이때 `~/.local/bin`을 PATH에 추가하거나 다음처럼 실행합니다.
+
+```sh
+~/.local/bin/finderviewer .
+```
+
+기존 Python FinderViewer의 알려진 설치 링크는 Rust 바이너리로 교체하며 백업 링크를 남깁니다. 다른 프로그램의 `finderviewer` 명령은 덮어쓰지 않고 중단합니다. `finderview` 별칭만 충돌하면 기존 명령을 보존하고 기본 명령을 설치합니다. 셸 설정은 변경 전에 백업하고 FinderViewer 관리 블록만 갱신합니다.
+
+## 실행과 경로 자동완성
+
+```sh
+finderviewer .
 finderviewer ~/Documents
 finderviewer "/경로/한글 공백 폴더"
 finderviewer
+finderview .
 ```
 
-인자를 생략해도 현재 폴더에서 시작합니다. `finderviewer ~/Doc`처럼 경로 일부를 입력한 뒤 **Tab**을 누르면 `cd`처럼 **폴더 경로만** 완성합니다.
-
-### 셸을 직접 선택하기
+인자를 생략하거나 `.`을 지정하면 현재 디렉터리에서 시작합니다. `finderviewer ~/Doc`까지 입력한 뒤 **Tab**을 누르면 `cd`처럼 폴더 경로를 완성합니다.
 
 ```sh
-.venv/bin/python scripts/install.py --shell zsh
+finderviewer --help
+finderviewer --version
 ```
-
-Bash를 쓴다면 `--shell bash`, 셸 설정을 변경하지 않으려면 `--shell none`을 사용합니다. `none`으로 설치한 경우 `~/.local/bin`을 PATH에 추가하거나 아래 명령으로 직접 실행하세요.
-
-```sh
-.venv/bin/finderviewer .
-```
-
-설치 스크립트는 이 체크아웃의 `.venv` 실행 파일을 `~/.local/bin`에 심볼릭 링크로 연결합니다. 셸 설정 변경 전 타임스탬프 백업을 만들고, 표시된 관리 블록만 추가·갱신합니다. 기존의 다른 `finderviewer` 명령이나 자동완성 파일이 있으면 덮어쓰지 않습니다. 저장소를 다른 위치로 옮기면 가상환경과 연결을 다시 설치해야 합니다.
-
-### Windows에서 실행
-
-Windows는 실기기 검증 전입니다. PowerShell에서 소스를 받은 뒤 다음과 같이 가상환경 안의 명령으로 실행할 수 있습니다. 위의 셸 등록 스크립트는 macOS/Linux용입니다.
-
-```powershell
-git clone https://github.com/choimagon/finderviewer_term.git
-cd finderviewer_term
-py -3 -m venv .venv
-.venv\Scripts\python -m pip install .
-.venv\Scripts\finderviewer.exe .
-```
-
-Python 3.11 이상을 선택하세요. Windows의 PATH 등록과 PowerShell 자동완성은 자동 설치하지 않습니다.
-
-## 다운로드해서 설치하기
-
-[릴리스 다운로드](https://github.com/choimagon/finderviewer_term/releases/latest)에서 배포 파일을 받을 수 있습니다.
-
-- **소스 압축 파일 `.tar.gz`**: 압축을 푼 폴더 안에서 빠른 설치의 `python3 -m venv .venv` 단계부터 실행합니다. 설치 스크립트와 자동완성 파일이 포함되어 있습니다.
-- **Python 패키지 `.whl`**: 기존 가상환경에서 `python -m pip install /다운로드/파일명.whl`로 설치할 수 있습니다. 명령은 활성화된 가상환경에서 사용할 수 있습니다. wheel만 설치하면 소스 체크아웃용 셸 자동 등록은 실행되지 않습니다.
-- **`SHA256SUMS`**: 다운로드 파일의 SHA-256 확인용입니다. 모든 배포 파일은 Python과 인터넷을 통한 의존 패키지 설치가 필요하며, 단독 실행 바이너리는 아닙니다.
-
-이 프로젝트는 GitHub에서 배포합니다. PyPI의 동명 패키지를 설치하는 `pip install finderview-terminal` 방식은 이 프로젝트의 배포 방법이 아닙니다.
 
 ## 사용법
 
+파일을 선택한 뒤 **하단의 열기 버튼**을 클릭하세요. 더블클릭이 터미널에서 잘 전달되지 않아도 버튼이나 `Enter`·`o`로 열 수 있습니다. 폴더는 안으로 탐색하고 파일은 OS 기본 앱으로 엽니다.
+
 | 조작 | 동작 |
 |---|---|
-| 폴더 클릭 | 오른쪽 열에 하위 목록 표시. 같은 폴더 다시 클릭하면 접기 |
+| 폴더 클릭 | 오른쪽 열에 하위 목록 표시, 같은 폴더 다시 클릭하면 접기 |
 | 파일 클릭 | 이름·크기·수정 시간·경로 확인 |
-| 파일 더블클릭 / Enter | OS 기본 외부 앱으로 파일 열기 |
+| 하단 **열기** / Enter / `o` | 선택한 폴더 탐색 또는 파일을 기본 앱으로 열기 |
+| 파일 더블클릭 | OS 기본 앱으로 열기 |
 | ↑ / ↓ | 항목 선택 |
-| → / ← | 선택 폴더 열기 / 이전 열로 포커스 이동 |
+| → / ← | 폴더 탐색 / 이전 열로 이동 |
 | Ctrl/Meta 클릭 / Shift 클릭 | 다중 선택 / 범위 선택 |
-| Space / Ctrl+A | 현재 항목 선택 토글 / 현재 열 전체 선택 |
-| `c` / `x` | 선택 항목 복사 대기 / 잘라내기 대기 |
+| Space / Ctrl+A | 항목 선택 토글 / 현재 열 전체 선택 |
+| `c` / `x` | 복사 대기 / 잘라내기 대기 |
 | `v` | 현재 열의 폴더에 붙여넣기 |
-| 마우스로 폴더에 드래그 | 이동. Ctrl/Meta와 함께 드래그하면 복사 |
+| 마우스로 폴더에 드래그 | 이동, Ctrl/Meta와 함께 드래그하면 복사 |
 | `m` | 이동할 폴더 경로 입력 |
 | F2 | 파일·폴더 이름 변경 |
 | Delete / Ctrl+D | 확인 후 휴지통으로 이동 |
-| 우클릭 / F10 | 열기·복사·잘라내기·붙여넣기·이동·이름 변경·삭제 메뉴 |
+| 우클릭 / F10 | 파일 작업 메뉴 |
 | `i` | 외부 파일·폴더 경로를 입력해 복사 |
 | F5 / `h` | 새로고침 / 점(.) 파일 표시 토글 |
+| `s` | 폴더 우선 → 이름순 → 최근 수정순 정렬 |
 | Ctrl+L | 탐색할 시작 폴더 변경 |
-| Backspace / 상위 버튼 | 시작 폴더의 상위 폴더로 이동 |
-| 정렬 메뉴 | 폴더 우선 / 이름순 / 최근 수정순 |
-| `q` / Ctrl+Q | 종료. Ctrl+Q는 입력 창에서도 종료 |
+| Backspace | 시작 폴더의 상위 폴더로 이동 |
+| `q` / Ctrl+Q | 종료 |
 
-파일 변경을 2초마다 확인합니다. 열이 많아지면 수평 스크롤을 사용하거나 방향키로 해당 열에 이동하세요.
+마우스 이벤트를 전달하는 터미널이 필요합니다. 터미널이 우클릭을 자체 메뉴로 처리하면 **F10**을 사용하세요.
 
-### 파일을 다른 폴더로 옮기는 예
+### 파일을 다른 폴더로 옮기기
 
-1. 옮길 파일을 클릭합니다.
-2. `x`를 누릅니다.
-3. 대상 폴더를 클릭해 그 안으로 들어갑니다.
-4. `v`를 누릅니다. 복사하려면 2번에서 `c`를 사용합니다.
+1. 파일을 선택하고 `x`를 누릅니다.
+2. 대상 폴더를 클릭해 들어갑니다.
+3. `v`를 누릅니다. 복사하려면 처음에 `c`를 사용합니다.
 
-파일·폴더 위에서 우클릭하거나 F10을 누른 뒤 **다른 폴더로 이동**을 선택해도 됩니다.
+우클릭/F10 메뉴나 `m`으로 대상 폴더 경로를 입력할 수도 있습니다.
 
-### 외부 파일을 드래그해서 넣기
+### 외부 파일 가져오기
 
-터미널은 GUI 앱처럼 파일 객체 대신 경로를 입력하는 경우가 많습니다.
+터미널에 파일을 드래그하면 보통 파일 객체 대신 경로가 입력됩니다. 대상 폴더를 연 뒤 `i`로 가져오기 입력 창을 열고 외부 파일을 그 입력 칸에 드래그하거나 경로를 붙여넣으세요. 확인 후 복사하며 원본은 유지합니다. 경로는 셸 명령으로 실행하지 않습니다.
 
-1. 대상 폴더를 엽니다.
-2. **`i`**를 눌러 가져오기 입력 창을 엽니다.
-3. 외부 파일을 그 입력 칸에 드래그하거나 경로를 붙여넣습니다.
-4. 복사를 확인합니다. 원본은 유지합니다.
+### 이름 충돌과 삭제
 
-쉘에서 이스케이프한 공백 경로, 여러 경로, 로컬 `file://` URI를 처리합니다. 경로를 쉘 명령으로 실행하지 않습니다. 브래킷 붙여넣기를 지원하는 터미널에서는 메인 화면에 경로를 붙여넣어도 가져오기 확인이 열립니다.
+같은 이름이 있으면 덮어쓰기·다른 이름·건너뛰기·취소 중에서 선택합니다. 덮어쓸 항목과 삭제 대상은 OS 휴지통으로 보냅니다. 휴지통을 사용할 수 없으면 중단하며 영구 삭제로 전환하지 않습니다.
 
-### Herdr에서 사용하기
-
-일반 셸 패널에서 `finderviewer .`로 실행합니다. Herdr가 우클릭을 자체 메뉴로 처리하는 경우 패널 ID를 조회한 뒤 해당 패널만 앱으로 전달하도록 설정합니다.
-
-```sh
-herdr pane list
-herdr pane input --pane <조회한-패널-ID> --right-click pane
-```
-
-Herdr 버전에 따라 명령 옵션이 다를 수 있으므로 `herdr pane input --help`로 확인하세요. 우클릭 설정을 바꾸지 않아도 F10 메뉴를 사용할 수 있습니다.
-
-## 파일 처리 방식
-
-- 이동·이름 변경·삭제와 작업 대상은 현재 탐색 루트 안으로 제한합니다. 다른 위치는 Ctrl+L로 명시적으로 시작 폴더를 변경합니다.
-- 외부 가져오기는 복사입니다. 심볼릭 링크는 보존하며 링크를 따라 루트 밖을 탐색하지 않습니다.
-- 시작 폴더 자체 변경, 자기 하위 폴더로 이동, 다른 선택 원본 덮어쓰기를 차단합니다.
-- 같은 이름이 있으면 **덮어쓰기 / 다른 이름 / 건너뛰기 / 취소**를 선택합니다. 덮어쓸 기존 항목은 휴지통에 보관한 뒤 교체합니다.
-- 삭제는 OS 휴지통만 사용합니다. 휴지통을 사용할 수 없으면 중단하며 영구 삭제로 전환하지 않습니다.
-- 복사본은 임시 항목에 완성한 뒤 덮어쓰기 방지 방식으로 게시합니다. 다른 디스크로 직접 이동하는 기능은 지원하지 않으므로, 이때는 복사 후 원본을 휴지통으로 이동하세요.
-- 여러 항목 처리 도중 I/O 오류가 발생하면 일부 작업이 완료됐을 수 있으며 완료 개수와 오류를 표시합니다.
-- VS Code의 `files.exclude`를 읽지 않는 독립 프로그램입니다. 문서 렌더러·인터넷 전송·텔레메트리는 포함하지 않습니다.
+현재 탐색 루트 밖의 항목을 변경하거나 시작 폴더 자체를 삭제·이동하지 않습니다. 다른 위치에서 작업하려면 Ctrl+L로 시작 폴더를 바꾸세요. 외부 파일 가져오기는 복사만 수행합니다. 심볼릭 링크를 통해 루트 밖을 탐색하는 작업은 제한합니다. 파일 작업 도중 오류가 나면 일부 작업이 완료됐을 수 있으므로 화면에 표시한 결과를 확인하세요.
 
 ## 업데이트
 
-같은 체크아웃에서 다음 명령을 실행한 뒤 프로그램을 다시 여세요.
+소스 빌드로 설치했다면 설치에 사용한 저장소에서 다음을 실행하고 프로그램을 다시 여세요. 바이너리로 설치했다면 새 릴리스 압축 파일을 받아 `--binary`로 다시 설치합니다.
 
 ```sh
 git pull --ff-only
-.venv/bin/python -m pip install .
-.venv/bin/python scripts/install.py
+sh scripts/install.sh
 ```
 
-## 개발과 테스트
+프로젝트는 [GitHub 저장소](https://github.com/choimagon/finderviewer_term)와 [릴리스](https://github.com/choimagon/finderviewer_term/releases)로 배포합니다. 이전 v0.1.0 릴리스의 `.whl`·Python 소스 압축 파일은 Python 버전입니다. Rust 버전은 Apple Silicon용 바이너리를 다운로드하거나 위의 소스 빌드 절차를 사용하세요. PyPI의 동명 패키지는 이 프로젝트의 설치 경로가 아닙니다.
+
+## 개발
 
 ```sh
-.venv/bin/python -m pip install -r requirements-dev.lock
-.venv/bin/python -m pip install -e '.[test]'
-.venv/bin/python -m pytest -q
+cargo build --locked
+cargo test --locked
+cargo run -- .
+cargo build --release --locked
+./target/release/finderviewer .
 ```
 
-파일 작업은 임시 폴더에서 검증하며, Textual Pilot으로 클릭·더블클릭·드래그·키보드·메뉴를 테스트합니다. 자동 테스트는 기본 앱 열기·휴지통 호출에 안전한 대역을 사용합니다. macOS의 실제 Herdr 패널에서도 별도 임시 파일의 이동·이름 변경·휴지통 삭제와 경로 Tab 자동완성을 확인했습니다.
+Rust와 Ratatui/Crossterm을 사용합니다. 파일 작업은 Rust 표준 라이브러리와 휴지통 라이브러리로 처리합니다. 프로그램에 인터넷 전송이나 텔레메트리 기능은 없습니다. 빌드 시에는 Cargo가 의존 패키지를 다운로드할 수 있습니다.
 
-패키지를 직접 만들려면:
+기존 Python 소스와 테스트는 `legacy/python/`에 보관합니다. 새 Rust 실행 파일의 동작 검증과는 별도입니다.
 
-```sh
-.venv/bin/python -m pip install build
-.venv/bin/python -m build
-```
-
-테스트용 폴더를 만들려면 `.venv/bin/python scripts/demo.py`를 실행하세요. 숨겨진 `--event-log` 옵션은 개발용 로컬 동작 로그이며, 기본 실행에서는 파일명·경로를 기록하지 않습니다.
+Rust 자동 테스트 **29개**와 macOS 실제 터미널에서 하단 열기 버튼을 통한 기본 앱 실행, 드래그 이동, F2 한글 이름 변경, 휴지통 삭제를 확인했습니다. Linux/Windows의 실제 터미널·기본 앱·휴지통 동작은 해당 환경에서 추가 검증이 필요합니다.
 
 문제나 제안은 [Issues](https://github.com/choimagon/finderviewer_term/issues)에 남겨주세요.
 
 ## 라이선스
 
-MIT. 자세한 내용은 [LICENSE](LICENSE)를 참고하세요.
+MIT. [LICENSE](LICENSE)를 참고하세요.
