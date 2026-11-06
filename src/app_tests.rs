@@ -435,3 +435,88 @@ fn visible_rows_distinguish_folder_document_and_regular_file_icons() {
     assert!(text.contains("📄"));
     assert!(text.contains("📕"));
 }
+
+#[test]
+fn footer_menu_rename_delete_and_quit_are_real_mouse_buttons() {
+    for (action, expected) in [
+        ('u', "menu"),
+        ('r', "rename"),
+        ('d', "trash"),
+        ('q', "quit"),
+    ] {
+        let (dir, mut app) = fixture();
+        std::fs::write(dir.path().join("keep.txt"), b"unchanged").unwrap();
+        app.refresh().unwrap();
+        render(&mut app);
+        let rect = app
+            .toolbar
+            .iter()
+            .find(|(r, ch)| *ch == action && r.y == app.open_button.y)
+            .unwrap()
+            .0;
+        mouse_at(
+            &mut app,
+            MouseEventKind::Down(MouseButton::Left),
+            (rect.x + 1, rect.y),
+            KeyModifiers::NONE,
+        );
+        match expected {
+            "menu" => assert!(matches!(app.dialog, Some(Dialog::Menu(_)))),
+            "rename" => assert!(matches!(
+                app.dialog,
+                Some(Dialog::Input {
+                    kind: InputKind::Rename(_),
+                    ..
+                })
+            )),
+            "trash" => assert!(matches!(app.dialog, Some(Dialog::Confirm(_)))),
+            "quit" => assert!(app.quit),
+            _ => unreachable!(),
+        }
+        assert_eq!(
+            std::fs::read(dir.path().join("keep.txt")).unwrap(),
+            b"unchanged"
+        );
+    }
+}
+#[test]
+fn narrow_terminal_keeps_all_five_primary_buttons_clickable() {
+    let (_dir, mut app) = fixture();
+    let mut terminal = Terminal::new(ratatui::backend::TestBackend::new(30, 20)).unwrap();
+    terminal.draw(|f| app.draw(f)).unwrap();
+    for action in ['o', 'u', 'r', 'd', 'q'] {
+        let rect = app
+            .toolbar
+            .iter()
+            .find(|(r, ch)| *ch == action && r.y == app.open_button.y)
+            .unwrap()
+            .0;
+        assert!(rect.right() <= 30);
+    }
+}
+
+#[test]
+fn context_menu_closes_on_background_click() {
+    let (_dir, mut app) = fixture();
+    app.dialog = Some(Dialog::Menu(0));
+    render(&mut app);
+    mouse_at(
+        &mut app,
+        MouseEventKind::Down(MouseButton::Left),
+        (0, 3),
+        KeyModifiers::NONE,
+    );
+    assert!(app.dialog.is_none());
+    assert!(!app.quit);
+}
+#[test]
+fn selected_name_in_details_is_green() {
+    let (dir, mut app) = fixture();
+    std::fs::write(dir.path().join("선택.txt"), b"content").unwrap();
+    app.refresh().unwrap();
+    let mut terminal = Terminal::new(ratatui::backend::TestBackend::new(120, 32)).unwrap();
+    terminal.draw(|f| app.draw(f)).unwrap();
+    let cell = &terminal.backend().buffer()[(1, 27)];
+    assert_eq!(cell.symbol(), "선");
+    assert_eq!(cell.fg, Color::LightGreen);
+}

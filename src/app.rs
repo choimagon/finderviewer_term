@@ -365,6 +365,7 @@ impl App {
         }
         match ch {
             'o' => self.activate(false, true)?,
+            'u' => self.dialog = Some(Dialog::Menu(0)),
             'c' | 'x' => {
                 let p = self.chosen();
                 self.status = format!(
@@ -822,6 +823,18 @@ impl App {
         })
     }
     fn mouse(&mut self, m: MouseEvent) -> Result<()> {
+        if matches!(self.dialog, Some(Dialog::Menu(_))) {
+            if m.kind == MouseEventKind::Down(MouseButton::Left)
+                && !self.dialog_area.contains((m.column, m.row).into())
+            {
+                self.dialog = None;
+                return Ok(());
+            }
+            if m.kind == MouseEventKind::Down(MouseButton::Right) {
+                self.dialog = None;
+                return self.mouse(m);
+            }
+        }
         if self.dialog.is_some() {
             if m.kind == MouseEventKind::Down(MouseButton::Left) {
                 if let Some((_, code)) = self
@@ -1085,7 +1098,7 @@ impl App {
                         let marked = self.selected.contains(&e.path);
                         let icon = entry_icon(e);
                         let name_style = if marked {
-                            Style::default().fg(Color::Cyan)
+                            Style::default().fg(Color::LightGreen)
                         } else if e.is_dir {
                             Style::default()
                                 .fg(Color::Yellow)
@@ -1125,53 +1138,106 @@ impl App {
         let y = area.bottom() - 5;
         let details = if let Some(e) = self.current() {
             let date: chrono::DateTime<chrono::Local> = e.modified.into();
-            format!(
-                " {} · {} · {} · {}개 선택\n {}",
-                clean(&e.name),
-                if e.is_dir {
-                    "폴더".into()
-                } else {
-                    format!("{} bytes", e.size)
-                },
-                date.format("%Y-%m-%d %H:%M"),
-                self.chosen().len(),
-                clean(e.path.display())
-            )
+            vec![
+                Line::from(vec![
+                    Span::styled(
+                        format!(" {}", clean(&e.name)),
+                        Style::default()
+                            .fg(Color::LightGreen)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Span::raw(format!(
+                        " · {} · {} · {}개 선택",
+                        if e.is_dir {
+                            "폴더".into()
+                        } else {
+                            format!("{} bytes", e.size)
+                        },
+                        date.format("%Y-%m-%d %H:%M"),
+                        self.chosen().len()
+                    )),
+                ]),
+                Line::from(format!(" {}", clean(e.path.display()))),
+            ]
         } else {
-            " 선택한 항목 없음".into()
+            vec![Line::from(" 선택한 항목 없음")]
         };
         f.render_widget(Paragraph::new(details), Rect::new(area.x, y, area.width, 2));
-        self.open_button = Rect::new(area.x, y + 2, 18, 1);
-        let enabled = self.current().is_some() && self.job.is_none();
-        f.render_widget(
-            Paragraph::new("  열기 [Enter/o]  ").style(
-                Style::default()
-                    .fg(if enabled { Color::Black } else { Color::Gray })
-                    .bg(if enabled {
-                        Color::Cyan
-                    } else {
-                        Color::DarkGray
-                    })
-                    .add_modifier(Modifier::BOLD),
-            ),
-            self.open_button,
-        );
-        if area.width > 20 {
+        let primary = [
+            ("열기", "열기", 'o'),
+            ("메뉴", "메뉴", 'u'),
+            ("이름 변경", "이름", 'r'),
+            ("삭제", "삭제", 'd'),
+            ("종료", "종료", 'q'),
+        ];
+        let compact = area.width < 65;
+        let mut bx = area.x;
+        for (label, short, ch) in primary {
+            let label = if compact { short } else { label };
+            let width = unicode_width::UnicodeWidthStr::width(label) as u16 + 2;
+            let rect = Rect::new(bx, y + 2, width, 1);
+            if rect.right() > area.right() {
+                break;
+            }
+            let enabled =
+                self.job.is_none() && (matches!(ch, 'u' | 'q') || self.current().is_some());
+            let color = if !enabled {
+                Color::DarkGray
+            } else if ch == 'd' {
+                Color::Red
+            } else if ch == 'o' {
+                Color::Cyan
+            } else {
+                Color::Blue
+            };
             f.render_widget(
-                Paragraph::new(" F10 메뉴 · c/x/v · F2 이름 · Ctrl+D 삭제"),
-                Rect::new(area.x + 19, y + 2, area.width - 19, 1),
+                Paragraph::new(format!(" {label} ")).style(
+                    Style::default()
+                        .fg(if ch == 'o' && enabled {
+                            Color::Black
+                        } else {
+                            Color::White
+                        })
+                        .bg(color)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                rect,
             );
+            if ch == 'o' {
+                self.open_button = rect;
+            }
+            self.toolbar.push((rect, ch));
+            bx = rect.right() + u16::from(!compact);
         }
         f.render_widget(
             Paragraph::new(format!(" {}", clean(&self.status)))
                 .style(Style::default().fg(Color::Yellow)),
             Rect::new(area.x, y + 3, area.width, 1),
         );
-        f.render_widget(
-            Paragraph::new(" i 가져오기 · h 숨김 · s 정렬 · Ctrl+L 경로 · q 종료")
-                .style(Style::default().fg(Color::DarkGray)),
-            Rect::new(area.x, y + 4, area.width, 1),
-        );
+        let mut bx = area.x;
+        for (label, ch) in [
+            ("가져오기", 'i'),
+            ("복사", 'c'),
+            ("잘라내기", 'x'),
+            ("붙여넣기", 'v'),
+            ("이동", 'm'),
+            ("경로", 'l'),
+            ("숨김", 'h'),
+            ("정렬", 's'),
+        ] {
+            let width = unicode_width::UnicodeWidthStr::width(label) as u16 + 2;
+            let rect = Rect::new(bx, y + 4, width, 1);
+            if rect.right() > area.right() {
+                break;
+            }
+            f.render_widget(
+                Paragraph::new(format!(" {label} "))
+                    .style(Style::default().fg(Color::White).bg(Color::DarkGray)),
+                rect,
+            );
+            self.toolbar.push((rect, ch));
+            bx = rect.right() + 1;
+        }
         self.dialog_buttons.clear();
         if let Some(dialog) = &self.dialog {
             let w = area.width.saturating_sub(4).min(84);
