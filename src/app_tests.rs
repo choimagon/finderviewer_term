@@ -414,3 +414,24 @@ fn modal_cancel_button_accepts_mouse_click_and_preserves_file() {
     assert!(file.exists());
     assert!(app.job.is_none());
 }
+
+#[test]
+fn visible_rows_distinguish_folder_document_and_regular_file_icons() {
+    let (dir, mut app) = fixture();
+    std::fs::create_dir(dir.path().join("폴더")).unwrap();
+    std::fs::write(dir.path().join("메모.txt"), b"text").unwrap();
+    std::fs::write(dir.path().join("문서.pdf"), b"binary").unwrap();
+    app.refresh().unwrap();
+    let mut terminal = Terminal::new(ratatui::backend::TestBackend::new(120, 32)).unwrap();
+    terminal.draw(|f| app.draw(f)).unwrap();
+    let text = terminal
+        .backend()
+        .buffer()
+        .content
+        .iter()
+        .map(|c| c.symbol())
+        .collect::<String>();
+    assert!(text.contains("📁"));
+    assert!(text.contains("📄"));
+    assert!(text.contains("📕"));
+}

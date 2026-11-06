@@ -13,7 +13,7 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
     Frame, Terminal,
 };
@@ -1076,31 +1076,31 @@ impl App {
                     Color::DarkGray
                 }));
             if col.entries.is_empty() {
-                f.render_widget(Paragraph::new("(空) 빈 폴더").block(block), r);
+                f.render_widget(Paragraph::new("빈 폴더").block(block), r);
             } else {
                 let items: Vec<ListItem> = col
                     .entries
                     .iter()
                     .map(|e| {
                         let marked = self.selected.contains(&e.path);
-                        let symbol = if e.is_symlink {
-                            "↗"
-                        } else if e.is_dir {
-                            "▸"
-                        } else {
-                            "·"
-                        };
-                        let text = format!(
-                            "{}{} {}",
-                            if marked { "✓" } else { " " },
-                            symbol,
-                            clean(&e.name)
-                        );
-                        ListItem::new(text).style(if marked {
+                        let icon = entry_icon(e);
+                        let name_style = if marked {
                             Style::default().fg(Color::Cyan)
+                        } else if e.is_dir {
+                            Style::default()
+                                .fg(Color::Yellow)
+                                .add_modifier(Modifier::BOLD)
                         } else {
                             Style::default()
-                        })
+                        };
+                        let padding = " ".repeat(
+                            2usize.saturating_sub(unicode_width::UnicodeWidthStr::width(icon)),
+                        );
+                        ListItem::new(Line::from(vec![
+                            Span::raw(if marked { "✓ " } else { "  " }),
+                            Span::raw(format!("{icon}{padding} ")),
+                            Span::styled(clean(&e.name), name_style),
+                        ]))
                     })
                     .collect();
                 let list = List::new(items)
@@ -1273,6 +1273,36 @@ impl App {
         }
     }
 }
+#[cfg(unix)]
+const MOUSE_CELL_MODE: &[u8] =
+    b"\x1b[?1000l\x1b[?1003l\x1b[?1005l\x1b[?1015l\x1b[?1016l\x1b[?1002h\x1b[?1006h";
+fn entry_icon(entry: &Entry) -> &'static str {
+    if entry.is_symlink {
+        return "🔗";
+    }
+    if entry.is_dir {
+        return "📁";
+    }
+    match entry
+        .path
+        .extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "pdf" => "📕",
+        "doc" | "docx" | "odt" => "📘",
+        "xls" | "xlsx" | "csv" => "📗",
+        "ppt" | "pptx" => "📙",
+        "zip" | "gz" | "tar" | "7z" | "rar" => "📦",
+        "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp" => "🎨",
+        "mp3" | "wav" | "flac" | "m4a" | "ogg" => "🎵",
+        "mp4" | "mov" | "mkv" | "webm" | "avi" => "🎬",
+        "rs" | "py" | "js" | "ts" | "tsx" | "jsx" | "go" | "c" | "cpp" | "java" | "sh" => "🧩",
+        _ => "📄",
+    }
+}
 struct Guard;
 impl Drop for Guard {
     fn drop(&mut self) {
@@ -1295,6 +1325,14 @@ pub fn run(root: PathBuf) -> Result<()> {
         EnableMouseCapture,
         EnableBracketedPaste
     )?;
+    // Crossterm also enables RXVT and all-motion modes. Use only cell-based
+    // SGR button/drag reports: nested terminals can misencode mixed protocols.
+    #[cfg(unix)]
+    {
+        use std::io::Write;
+        io::stdout().write_all(MOUSE_CELL_MODE)?;
+        io::stdout().flush()?;
+    }
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
     let mut dirty = true;
     while !app.quit {
