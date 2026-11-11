@@ -520,3 +520,60 @@ fn selected_name_in_details_is_green() {
     assert_eq!(cell.symbol(), "선");
     assert_eq!(cell.fg, Color::LightGreen);
 }
+
+fn fake_open_directory(path: &Path) -> Result<()> {
+    assert!(path.is_dir());
+    std::fs::write(
+        path.join(".opened-folder-marker"),
+        path.to_string_lossy().as_bytes(),
+    )?;
+    Ok(())
+}
+#[test]
+fn open_current_folder_button_opens_empty_directory_in_external_explorer() {
+    let (dir, mut app) = fixture();
+    app.opener = fake_open_directory;
+    render(&mut app);
+    let rect = app.toolbar.iter().find(|(_, ch)| *ch == 'e').unwrap().0;
+    mouse_at(
+        &mut app,
+        MouseEventKind::Down(MouseButton::Left),
+        (rect.x + 1, rect.y),
+        KeyModifiers::NONE,
+    );
+    finish(&mut app);
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join(".opened-folder-marker")).unwrap(),
+        dir.path().canonicalize().unwrap().to_string_lossy()
+    );
+    assert_eq!(app.columns.len(), 1);
+}
+#[test]
+fn open_current_folder_uses_browsed_column_instead_of_selected_file() {
+    let (dir, mut app) = fixture();
+    let folder = dir.path().join("한글 폴더");
+    std::fs::create_dir(&folder).unwrap();
+    std::fs::write(folder.join("file.txt"), b"unchanged").unwrap();
+    app.opener = fake_open_directory;
+    app.refresh().unwrap();
+    click(&mut app, 0, "한글 폴더");
+    click(&mut app, 1, "file.txt");
+    render(&mut app);
+    let rect = app.toolbar.iter().find(|(_, ch)| *ch == 'e').unwrap().0;
+    mouse_at(
+        &mut app,
+        MouseEventKind::Down(MouseButton::Left),
+        (rect.x + 1, rect.y),
+        KeyModifiers::NONE,
+    );
+    finish(&mut app);
+    assert_eq!(
+        std::fs::read_to_string(folder.join(".opened-folder-marker")).unwrap(),
+        folder.canonicalize().unwrap().to_string_lossy()
+    );
+    assert_eq!(
+        std::fs::read(folder.join("file.txt")).unwrap(),
+        b"unchanged"
+    );
+    assert!(!dir.path().join(".opened-folder-marker").exists());
+}

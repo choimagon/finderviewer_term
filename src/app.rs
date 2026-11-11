@@ -365,6 +365,7 @@ impl App {
         }
         match ch {
             'o' => self.activate(false, true)?,
+            'e' => self.open_file(self.directory())?,
             'u' => self.dialog = Some(Dialog::Menu(0)),
             'c' | 'x' => {
                 let p = self.chosen();
@@ -1020,6 +1021,7 @@ impl App {
         let mut x = area.x;
         for (label, ch, width) in [
             (" 상위 ", 'p', 8),
+            (" 이 폴더 열기 ", 'e', 16),
             (" 새로고침 ", 'f', 12),
             (
                 if self.hidden {

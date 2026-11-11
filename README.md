@@ -8,13 +8,13 @@
 
 ## 바로 설치 — Apple Silicon Mac
 
-[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.2.2)에서 **`finderviewer-v0.2.2-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
+[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.2.3)에서 **`finderviewer-v0.2.3-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
 
 다운로드한 폴더에서:
 
 ```sh
-tar xzf finderviewer-v0.2.2-macos-arm64.tar.gz
-cd finderviewer-v0.2.2-macos-arm64
+tar xzf finderviewer-v0.2.3-macos-arm64.tar.gz
+cd finderviewer-v0.2.3-macos-arm64
 sh scripts/install.sh --binary ./finderviewer
 ```
 
@@ -74,6 +74,8 @@ finderviewer --version
 ```
 
 ## 사용법
+
+상단 **이 폴더 열기** 버튼(단축키 `e`)은 현재 탐색 중인 폴더를 Finder 등 OS 기본 파일 탐색기에서 엽니다. 파일을 선택한 상태에서도 그 파일이 들어 있는 폴더를 엽니다.
 
 하단의 열기·메뉴·이름 변경·삭제·종료는 모두 마우스로 클릭할 수 있습니다. 우클릭 메뉴 바깥을 클릭하면 닫히며, 선택한 이름은 하단에 초록색으로 표시합니다.
 
@@ -150,7 +152,7 @@ Rust와 Ratatui/Crossterm을 사용합니다. 파일 작업은 Rust 표준 라�
 
 기존 Python 소스와 테스트는 `legacy/python/`에 보관합니다. 새 Rust 실행 파일의 동작 검증과는 별도입니다.
 
-Rust 자동 테스트 **34개**와 macOS 실제 터미널에서 하단 열기 버튼을 통한 기본 앱 실행, 드래그 이동, F2 한글 이름 변경, 휴지통 삭제를 확인했습니다. Linux/Windows의 실제 터미널·기본 앱·휴지통 동작은 해당 환경에서 추가 검증이 필요합니다.
+Rust 자동 테스트 **36개**와 macOS 실제 터미널에서 하단 열기 버튼을 통한 기본 앱 실행, 드래그 이동, F2 한글 이름 변경, 휴지통 삭제를 확인했습니다. Linux/Windows의 실제 터미널·기본 앱·휴지통 동작은 해당 환경에서 추가 검증이 필요합니다.
 
 문제나 제안은 [Issues](https://github.com/choimagon/finderviewer_term/issues)에 남겨주세요.
 
