@@ -88,7 +88,7 @@ struct App {
     last_refresh: Instant,
     opener: fn(&Path) -> Result<()>,
 }
-fn clean(value: impl std::fmt::Display) -> String {
+pub(crate) fn clean(value: impl std::fmt::Display) -> String {
     value
         .to_string()
         .chars()
@@ -132,14 +132,48 @@ fn paths(text: &str, base: &Path) -> Result<Vec<PathBuf>> {
         })
         .collect()
 }
-fn launch_external(path: &Path) -> Result<()> {
-    let mut command = if cfg!(target_os = "macos") {
+pub(crate) fn launch_external(path: &Path) -> Result<()> {
+    let command = if cfg!(target_os = "macos") {
         Command::new("/usr/bin/open")
     } else if cfg!(target_os = "windows") {
         Command::new("explorer.exe")
     } else {
         Command::new("xdg-open")
     };
+    launch_command(command, path)
+}
+pub(crate) fn launch_downloaded(path: &Path) -> Result<()> {
+    let extension = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    if cfg!(target_os = "macos")
+        && matches!(
+            extension.as_str(),
+            "py" | "pyw"
+                | "sh"
+                | "bash"
+                | "zsh"
+                | "rb"
+                | "pl"
+                | "js"
+                | "ts"
+                | "rs"
+                | "go"
+                | "c"
+                | "cpp"
+                | "java"
+        )
+    {
+        let mut command = Command::new("/usr/bin/open");
+        command.arg("-t");
+        launch_command(command, path)
+    } else {
+        launch_external(path)
+    }
+}
+fn launch_command(mut command: Command, path: &Path) -> Result<()> {
     let mut child = command
         .arg(path)
         .stdout(std::process::Stdio::null())
@@ -1344,7 +1378,7 @@ impl App {
 #[cfg(unix)]
 const MOUSE_CELL_MODE: &[u8] =
     b"\x1b[?1000l\x1b[?1003l\x1b[?1005l\x1b[?1015l\x1b[?1016l\x1b[?1002h\x1b[?1006h";
-fn entry_icon(entry: &Entry) -> &'static str {
+pub(crate) fn entry_icon(entry: &Entry) -> &'static str {
     if entry.is_symlink {
         return "🔗";
     }
@@ -1371,7 +1405,7 @@ fn entry_icon(entry: &Entry) -> &'static str {
         _ => "📄",
     }
 }
-struct Guard;
+pub(crate) struct Guard;
 impl Drop for Guard {
     fn drop(&mut self) {
         let _ = disable_raw_mode();
@@ -1383,8 +1417,7 @@ impl Drop for Guard {
         );
     }
 }
-pub fn run(root: PathBuf) -> Result<()> {
-    let mut app = App::new(root)?;
+pub(crate) fn terminal() -> Result<(Guard, Terminal<CrosstermBackend<io::Stdout>>)> {
     enable_raw_mode()?;
     let _guard = Guard;
     execute!(
@@ -1401,7 +1434,13 @@ pub fn run(root: PathBuf) -> Result<()> {
         io::stdout().write_all(MOUSE_CELL_MODE)?;
         io::stdout().flush()?;
     }
-    let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+    let terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
+    Ok((_guard, terminal))
+}
+
+pub fn run(root: PathBuf) -> Result<()> {
+    let mut app = App::new(root)?;
+    let (_guard, mut terminal) = terminal()?;
     let mut dirty = true;
     while !app.quit {
         if let Some(rx) = &app.job {

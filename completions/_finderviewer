@@ -1,7 +1,22 @@
-#compdef finderviewer
+#compdef finderviewer finderview
 # FinderViewer managed completion
-# Complete directories only; zsh handles Korean names and spaces.
-_arguments \
+local context state state_descr line
+local -A opt_args
+_arguments -C \
   '(-h --help)'{-h,--help}'[도움말 표시]' \
   '--version[버전 표시]' \
-  '1:탐색할 폴더:_files -/'
+  '--ssh[SSH 읽기 전용 탐색]:SSH 호스트:->ssh_host' \
+  '1:탐색할 폴더:->directory'
+case $state in
+  ssh_host)
+    if [[ $PREFIX == *@* ]]; then compset -P '*@'; fi
+    _ssh_hosts
+    ;;
+  directory)
+    if [[ -n ${opt_args[--ssh]} ]]; then
+      _message '원격 폴더 경로 (생략하면 원격 홈, 서버 자동조회 없음)'
+    else
+      _files -/
+    fi
+    ;;
+esac

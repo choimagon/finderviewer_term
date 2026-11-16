@@ -8,13 +8,13 @@
 
 ## 바로 설치 — Apple Silicon Mac
 
-[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.2.3)에서 **`finderviewer-v0.2.3-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
+[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.3.0)에서 **`finderviewer-v0.3.0-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
 
 다운로드한 폴더에서:
 
 ```sh
-tar xzf finderviewer-v0.2.3-macos-arm64.tar.gz
-cd finderviewer-v0.2.3-macos-arm64
+tar xzf finderviewer-v0.3.0-macos-arm64.tar.gz
+cd finderviewer-v0.3.0-macos-arm64
 sh scripts/install.sh --binary ./finderviewer
 ```
 
@@ -73,7 +73,39 @@ finderviewer --help
 finderviewer --version
 ```
 
-## 사용법
+## SSH 원격 폴더 탐색
+
+```sh
+finderviewer --ssh user@example.com
+finderviewer --ssh my-server /home/user/project
+finderviewer --ssh user@example.com '/home/user/한글 공백 폴더'
+```
+
+`--ssh` 뒤에는 `사용자@서버` 또는 `~/.ssh/config`의 호스트 별칭을 넣습니다. 원격 폴더를 생략하면 **서버의 홈 폴더**에서 시작합니다. 인자를 생략해도 로컬 현재 디렉터리 경로를 원격 시작 폴더로 사용하지 않습니다. 포트·키·ProxyJump 같은 연결 설정은 평소 사용하는 SSH 설정 파일에 지정하세요.
+
+로컬에 OpenSSH의 `ssh` 명령이 필요하고, **서버에는 Python 3와 POSIX 셸이 필요합니다.** 로컬 Rust 실행 파일에는 Python 설치가 필요하지 않습니다. 서버의 Python은 목록 조회와 파일 읽기에만 사용하며 별도 프로그램을 설치하지 않습니다.
+
+최초 연결의 호스트 키 확인과 비밀번호 입력은 일반 SSH처럼 터미널에서 처리합니다. 기존 `ssh-agent`와 SSH 설정도 사용할 수 있습니다. 인증을 마치면 원격 열 보기 화면이 열립니다. 자격 증명을 프로그램에 저장하거나 호스트 키 검사를 끄지 않습니다.
+
+| 조작 | SSH 모드 동작 |
+|---|---|
+| 폴더 클릭 / → | 오른쪽 열로 탐색 |
+| 파일 한 번 클릭 | 선택과 원격 경로·크기 표시 |
+| 파일 더블클릭 / 열기 / Enter / `o` | 임시 폴더에 내려받은 뒤 **로컬 앱**으로 열기 |
+| F5 / 새로고침 | 현재 원격 폴더 다시 조회 |
+| Ctrl+L / 경로 | 원격 시작 폴더 변경 |
+| 숨김 / 정렬 | 받아 둔 목록을 필터·정렬 |
+| Esc / 취소 | 진행 중인 목록 조회·다운로드 취소 |
+| `q` / 종료 | 조회·다운로드 중에도 종료 |
+| Ctrl+Q | 경로 입력 창을 포함해 종료 |
+
+SSH 모드는 **읽기 전용**입니다. 원격 업로드·이동·삭제·이름 변경과 원격 프로그램 실행 버튼은 제공하지 않습니다. 원격 파일을 열면 매번 독립된 로컬 임시 복사본을 만듭니다. macOS에서는 `.py` 같은 소스 파일을 로컬 텍스트 앱으로 열며, 서버에서 실행하지 않습니다. 이미지와 문서는 OS에 연결된 로컬 앱으로 엽니다.
+
+로컬 앱에서 저장해도 원격 원본에는 반영되지 않습니다. 열린 앱이 파일을 계속 읽을 수 있도록 다운로드 복사본은 프로그램 종료 후에도 OS 임시 폴더에 남습니다. 민감한 파일은 사용 후 해당 복사본을 직접 삭제하세요. 원격 인증 전에는 일반 터미널 입력을 사용하며, 연결 후 네트워크 작업은 화면 입력을 막지 않도록 별도로 처리합니다.
+
+zsh는 `--ssh` 뒤에서 SSH 호스트 후보를 완성합니다. 원격 폴더의 Tab 완성은 지원하지 않으며, 자동완성을 위해 서버에 연결하지 않습니다. Bash에서는 SSH 호스트와 원격 경로를 직접 입력합니다. 로컬 모드의 폴더 Tab 완성은 유지됩니다.
+
+## 사용법 (로컬 모드)
 
 상단 **이 폴더 열기** 버튼(단축키 `e`)은 현재 탐색 중인 폴더를 Finder 등 OS 기본 파일 탐색기에서 엽니다. 파일을 선택한 상태에서도 그 파일이 들어 있는 폴더를 엽니다.
 
@@ -148,11 +180,11 @@ cargo build --release --locked
 ./target/release/finderviewer .
 ```
 
-Rust와 Ratatui/Crossterm을 사용합니다. 파일 작업은 Rust 표준 라이브러리와 휴지통 라이브러리로 처리합니다. 프로그램에 인터넷 전송이나 텔레메트리 기능은 없습니다. 빌드 시에는 Cargo가 의존 패키지를 다운로드할 수 있습니다.
+Rust와 Ratatui/Crossterm을 사용합니다. 파일 작업은 Rust 표준 라이브러리와 휴지통 라이브러리로 처리합니다. 사용자가 `--ssh`로 지정한 서버와 통신하며 텔레메트리 기능은 없습니다. 빌드 시에는 Cargo가 의존 패키지를 다운로드할 수 있습니다.
 
 기존 Python 소스와 테스트는 `legacy/python/`에 보관합니다. 새 Rust 실행 파일의 동작 검증과는 별도입니다.
 
-Rust 자동 테스트 **36개**와 macOS 실제 터미널에서 하단 열기 버튼을 통한 기본 앱 실행, 드래그 이동, F2 한글 이름 변경, 휴지통 삭제를 확인했습니다. Linux/Windows의 실제 터미널·기본 앱·휴지통 동작은 해당 환경에서 추가 검증이 필요합니다.
+자동 테스트 51개를 통과했습니다. 별도 실제 SSH 시험에서 원격 목록 조회, `.py`·`.png`·`.md` 파일 다운로드와 로컬 앱 열기, 지연된 요청 중 즉시 종료와 연결 정리를 확인했습니다. 실제 SSH 통합 시험은 접속 정보가 필요한 별도 테스트이며 기본 테스트에서는 제외합니다. 로컬 기능은 macOS 실제 터미널에서 하단 열기 버튼, 드래그 이동, F2 한글 이름 변경, 휴지통 삭제를 확인했습니다. Linux/Windows의 실제 터미널·기본 앱·휴지통 동작은 해당 환경에서 추가 검증이 필요합니다.
 
 문제나 제안은 [Issues](https://github.com/choimagon/finderviewer_term/issues)에 남겨주세요.
 

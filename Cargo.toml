@@ -1,6 +1,6 @@
 [package]
 name = "finderviewer"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 description = "Finder-style terminal column file explorer"
@@ -16,8 +16,6 @@ shell-words = "1"
 percent-encoding = "2"
 chrono = "0.4"
 unicode-width = "0.2"
-
-[dev-dependencies]
 tempfile = "3"
 
 [profile.release]
