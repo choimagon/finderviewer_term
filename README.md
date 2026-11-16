@@ -8,13 +8,13 @@
 
 ## 바로 설치 — Apple Silicon Mac
 
-[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.3.0)에서 **`finderviewer-v0.3.0-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
+[릴리스](https://github.com/choimagon/finderviewer_term/releases/tag/v0.3.1)에서 **`finderviewer-v0.3.1-macos-arm64.tar.gz`**를 다운로드하세요. Apple Silicon Mac에서 빌드한 네이티브 실행 파일입니다. **Rust와 Python을 설치할 필요가 없습니다.** Intel Mac·Linux·Windows용 실행 파일은 제공하지 않으며 해당 환경은 검증하지 않았습니다.
 
 다운로드한 폴더에서:
 
 ```sh
-tar xzf finderviewer-v0.3.0-macos-arm64.tar.gz
-cd finderviewer-v0.3.0-macos-arm64
+tar xzf finderviewer-v0.3.1-macos-arm64.tar.gz
+cd finderviewer-v0.3.1-macos-arm64
 sh scripts/install.sh --binary ./finderviewer
 ```
 
@@ -99,13 +99,15 @@ finderviewer --ssh user@example.com '/home/user/한글 공백 폴더'
 | `q` / 종료 | 조회·다운로드 중에도 종료 |
 | Ctrl+Q | 경로 입력 창을 포함해 종료 |
 
-SSH 모드는 **읽기 전용**입니다. 원격 업로드·이동·삭제·이름 변경과 원격 프로그램 실행 버튼은 제공하지 않습니다. 원격 파일을 열면 매번 독립된 로컬 임시 복사본을 만듭니다. macOS에서는 `.py` 같은 소스 파일을 로컬 텍스트 앱으로 열며, 서버에서 실행하지 않습니다. 이미지와 문서는 OS에 연결된 로컬 앱으로 엽니다.
+SSH 모드는 **읽기 전용**입니다. 원격 업로드·이동·삭제·이름 변경과 원격 프로그램 실행 버튼은 제공하지 않습니다. 원격 파일을 열면 매번 독립된 로컬 임시 복사본을 만듭니다. `.py`·`.pyw` 파일은 **로컬 VS Code**로 열며, 서버에서 실행하지 않습니다. macOS에서 그 외 소스 파일은 로컬 텍스트 앱으로 엽니다. 이미지와 문서는 OS에 연결된 로컬 앱으로 엽니다.
 
 로컬 앱에서 저장해도 원격 원본에는 반영되지 않습니다. 열린 앱이 파일을 계속 읽을 수 있도록 다운로드 복사본은 프로그램 종료 후에도 OS 임시 폴더에 남습니다. 민감한 파일은 사용 후 해당 복사본을 직접 삭제하세요. 원격 인증 전에는 일반 터미널 입력을 사용하며, 연결 후 네트워크 작업은 화면 입력을 막지 않도록 별도로 처리합니다.
 
 zsh는 `--ssh` 뒤에서 SSH 호스트 후보를 완성합니다. 원격 폴더의 Tab 완성은 지원하지 않으며, 자동완성을 위해 서버에 연결하지 않습니다. Bash에서는 SSH 호스트와 원격 경로를 직접 입력합니다. 로컬 모드의 폴더 Tab 완성은 유지됩니다.
 
 ## 사용법 (로컬 모드)
+
+**Python 파일(`.py`·`.pyw`)은 로컬·SSH 모드 모두 VS Code로 엽니다.** VS Code가 설치되어 있어야 합니다. macOS는 Visual Studio Code 앱을 사용하고, 다른 운영체제는 `code` 명령이 PATH에 있어야 합니다. Python 파일을 실행하는 동작은 하지 않습니다. 다른 파일은 기존의 기본 연결 앱으로 엽니다.
 
 상단 **이 폴더 열기** 버튼(단축키 `e`)은 현재 탐색 중인 폴더를 Finder 등 OS 기본 파일 탐색기에서 엽니다. 파일을 선택한 상태에서도 그 파일이 들어 있는 폴더를 엽니다.
 

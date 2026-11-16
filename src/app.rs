@@ -1,5 +1,5 @@
 use crate::fs::{Entry, Manager, Policy, Sort};
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use crossterm::{
     event::{
         self, DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
@@ -133,6 +133,9 @@ fn paths(text: &str, base: &Path) -> Result<Vec<PathBuf>> {
         .collect()
 }
 pub(crate) fn launch_external(path: &Path) -> Result<()> {
+    if is_python(path) {
+        return launch_vscode(path);
+    }
     let command = if cfg!(target_os = "macos") {
         Command::new("/usr/bin/open")
     } else if cfg!(target_os = "windows") {
@@ -143,6 +146,9 @@ pub(crate) fn launch_external(path: &Path) -> Result<()> {
     launch_command(command, path)
 }
 pub(crate) fn launch_downloaded(path: &Path) -> Result<()> {
+    if is_python(path) {
+        return launch_vscode(path);
+    }
     let extension = path
         .extension()
         .and_then(|e| e.to_str())
@@ -151,19 +157,7 @@ pub(crate) fn launch_downloaded(path: &Path) -> Result<()> {
     if cfg!(target_os = "macos")
         && matches!(
             extension.as_str(),
-            "py" | "pyw"
-                | "sh"
-                | "bash"
-                | "zsh"
-                | "rb"
-                | "pl"
-                | "js"
-                | "ts"
-                | "rs"
-                | "go"
-                | "c"
-                | "cpp"
-                | "java"
+            "sh" | "bash" | "zsh" | "rb" | "pl" | "js" | "ts" | "rs" | "go" | "c" | "cpp" | "java"
         )
     {
         let mut command = Command::new("/usr/bin/open");
@@ -172,6 +166,27 @@ pub(crate) fn launch_downloaded(path: &Path) -> Result<()> {
     } else {
         launch_external(path)
     }
+}
+fn is_python(path: &Path) -> bool {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|extension| {
+            extension.eq_ignore_ascii_case("py") || extension.eq_ignore_ascii_case("pyw")
+        })
+}
+fn launch_vscode(path: &Path) -> Result<()> {
+    let mut command = if cfg!(target_os = "macos") {
+        let mut command = Command::new("/usr/bin/open");
+        command.args(["-a", "Visual Studio Code"]);
+        command
+    } else if cfg!(target_os = "windows") {
+        Command::new("code.cmd")
+    } else {
+        Command::new("code")
+    };
+    command.arg("--");
+    launch_command(command, path)
+        .context("VS Code로 열지 못했습니다. VS Code 설치와 실행을 확인하세요.")
 }
 fn launch_command(mut command: Command, path: &Path) -> Result<()> {
     let mut child = command
